@@ -1,0 +1,32 @@
+version: "3.8"
+
+
+services:
+
+  db:
+    image: 'postgres:latest'
+    restart: always
+    environment:
+      POSTGRES_DB: gotube
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./docker/postgres:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "9000:8080"
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
+volumes:
+  mydata:
