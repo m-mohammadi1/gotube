@@ -10,20 +10,20 @@ import (
 	"net/http"
 )
 
-type UsersHandler struct {
+type Handler struct {
 	repo   repository.UserRepository
 	config config.Data
 }
 
-func NewHandler(repo repository.UserRepository, config config.Data) UsersHandler {
-	return UsersHandler{
+func New(repo repository.UserRepository, config config.Data) Handler {
+	return Handler{
 		repo:   repo,
 		config: config,
 	}
 }
 
 // Register registers a new user
-func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	if email == "" {
 		handlerutils.ReturnJsonError(w, http.StatusBadRequest, "Email is invalid")
@@ -70,7 +70,7 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 	handlerutils.ReturnJsonMessages(w, http.StatusOK, "User created successfully")
 }
 
-func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	if email == "" {
 		handlerutils.ReturnJsonError(w, http.StatusBadRequest, "Email is invalid")

@@ -1,4 +1,4 @@
-package channelauth
+package channelauthhandler
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ type Handler struct {
 	util   channelauth.Util
 }
 
-func NewHandler(repo repository.ChannelRepository, config config.Data) Handler {
+func New(repo repository.ChannelRepository, config config.Data) Handler {
 	return Handler{
 		repo:   repo,
 		config: config,

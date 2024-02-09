@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"gotube/pkg/model"
-	"gotube/pkg/repository/postgres/channel"
+	"gotube/pkg/repository/postgres/channelrepo"
 	"gotube/pkg/repository/postgres/userrepo"
 )
 
@@ -19,7 +19,7 @@ type Repository struct {
 func New(db *sql.DB) Repository {
 	return Repository{
 		UserRepository:    userrepo.New(db),
-		ChannelRepository: channel.NewRepository(db),
+		ChannelRepository: channelrepo.New(db),
 	}
 }
 

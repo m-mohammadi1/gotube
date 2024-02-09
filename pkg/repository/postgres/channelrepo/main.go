@@ -1,4 +1,4 @@
-package channel
+package channelrepo
 
 import (
 	"context"
@@ -6,17 +6,17 @@ import (
 	"gotube/pkg/model"
 )
 
-type Repository struct {
+type PostgresRepository struct {
 	db *sql.DB
 }
 
-func NewRepository(db *sql.DB) *Repository {
-	return &Repository{
+func New(db *sql.DB) *PostgresRepository {
+	return &PostgresRepository{
 		db: db,
 	}
 }
 
-func (r *Repository) UpdateOrCreate(ctx context.Context, channel model.Channel) (*model.Channel, error) {
+func (r *PostgresRepository) UpdateOrCreate(ctx context.Context, channel model.Channel) (*model.Channel, error) {
 	query := `
 		INSERT INTO channels (user_id, youtube_id, title, added_at, token)
         VALUES ($1, $2, $3, $4, $5)

@@ -48,26 +48,6 @@ func main() {
 	// attach repos
 	app.Repository = repository.New(app.DB)
 
-	//channel := model.Channel{
-	//	UserID:    1,
-	//	YoutubeID: "your_youtube_id2",
-	//	Title:     "Your Channel Title",
-	//	AddedAt:   time.Now(),
-	//	Token: oauth2.Token{
-	//		AccessToken:  "your_access_token",
-	//		TokenType:    "Bearer",
-	//		RefreshToken: "your_refresh_token",
-	//		Expiry:       time.Now().AddDate(1, 0, 0), // Example: expires after 1 year
-	//	},
-	//}
-	//chann, err := app.Repository.ChannelRepository.UpdateOrCreate(context.Background(), channel)
-	//
-	//if err != nil {
-	//	panic(err)
-	//}
-	//log.Println(chann)
-	//return
-
 	// add handlers and routes
 	app.Middleware = middleware.New(app.Config, app.Repository.UserRepository)
 	app.Handler = handlers.New(app.Repository, app.Config)
