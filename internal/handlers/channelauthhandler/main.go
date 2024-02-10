@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"gotube/internal/config"
 	"gotube/internal/handlers/handlerutils"
-	"gotube/internal/utils/channelauth"
 	"gotube/pkg/model"
 	"gotube/pkg/repository"
 	"net/http"
@@ -13,20 +12,23 @@ import (
 type Handler struct {
 	repo   repository.ChannelRepository // channel repo
 	config config.Data
-	util   channelauth.Util
+	util   ChannelAuthUtil
+}
+
+type ChannelAuthUtil interface {
+	GenerateAuthUrl(user model.User) string
+	HandleCallback(r *http.Request) (*model.Channel, error)
 }
 
 func New(
 	repo repository.ChannelRepository,
 	config config.Data,
-	tokenExchanger channelauth.TokenExchanger,
-	channelLister channelauth.ChannelLister,
+	authUtil ChannelAuthUtil,
 ) Handler {
-
 	return Handler{
 		repo:   repo,
 		config: config,
-		util:   channelauth.New(config, tokenExchanger, channelLister),
+		util:   authUtil,
 	}
 }
 
