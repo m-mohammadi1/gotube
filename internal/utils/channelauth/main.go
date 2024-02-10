@@ -6,7 +6,6 @@ import (
 	"errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 	"gotube/internal/config"
 	"gotube/pkg/model"
@@ -15,15 +14,29 @@ import (
 )
 
 type Util struct {
-	config config.Data
-}
-
-func NewUtil(config config.Data) Util {
-	return Util{config: config}
+	config    config.Data
+	exchanger TokenExchanger
+	lister    ChannelLister
 }
 
 type state struct {
 	UserID int64 `json:"user_id"`
+}
+
+type TokenExchanger interface {
+	Exchange(ctx context.Context, config *oauth2.Config, code string) (*oauth2.Token, error)
+}
+
+type ChannelLister interface {
+	GetMineChannel(ctx context.Context, config *oauth2.Config, token oauth2.Token) (*youtube.Channel, error)
+}
+
+func New(config config.Data, exchanger TokenExchanger, lister ChannelLister) Util {
+	return Util{
+		config,
+		exchanger,
+		lister,
+	}
 }
 
 // GenerateAuthUrl create authorization link
@@ -34,7 +47,7 @@ func (u *Util) GenerateAuthUrl(user model.User) string {
 		UserID: user.ID,
 	}
 	stateString, _ := json.Marshal(state)
-	url := conf.AuthCodeURL(string(stateString) + "0")
+	url := conf.AuthCodeURL(string(stateString) + "||")
 
 	return url
 }
@@ -47,7 +60,7 @@ func (u *Util) HandleCallback(r *http.Request) (*model.Channel, error) {
 	stateString := r.URL.Query().Get("state")
 
 	var state state
-	err := json.Unmarshal([]byte(strings.Split(stateString, "0")[0]), &state)
+	err := json.Unmarshal([]byte(strings.Split(stateString, "||")[0]), &state)
 	if err != nil {
 		return nil, errors.New("invalid callback params: state")
 	}
@@ -56,31 +69,16 @@ func (u *Util) HandleCallback(r *http.Request) (*model.Channel, error) {
 		return nil, errors.New("invalid callback params: code")
 	}
 
-	token, err := conf.Exchange(r.Context(), code)
+	token, err := u.exchanger.Exchange(r.Context(), conf, code)
 	if err != nil {
-		return nil, errors.New("invalid google code")
+		return nil, err
 	}
 
 	// retrieve channel data
-	ctx := context.Background()
-
-	youtubeService, err := youtube.NewService(ctx, option.WithHTTPClient(conf.Client(ctx, token)))
+	chosenChannel, err := u.lister.GetMineChannel(r.Context(), conf, *token)
 	if err != nil {
-		return nil, errors.New("failed to retrieve channel data")
+		return nil, err
 	}
-	call := youtubeService.Channels.List([]string{"id", "snippet"}).Mine(true)
-	channels, err := call.Do()
-	if err != nil {
-		return nil, errors.New("failed to retrieve channel list")
-	}
-
-	chosenChannel := channels.Items[0]
-
-	if chosenChannel == nil {
-		return nil, errors.New("failed to retrieve chosen channel")
-	}
-
-	// create channel in database or update it
 
 	return &model.Channel{
 		Token:     *token,
