@@ -36,7 +36,7 @@ func (m *Middleware) EnableCors(next http.Handler) http.Handler {
 
 func (m *Middleware) Authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claims, err := authutil.VerifyAuthTokenInRequestHeader(w, r, m.config)
+		claims, err := authutil.VerifyAuthTokenInRequestHeader(r, m.config)
 
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

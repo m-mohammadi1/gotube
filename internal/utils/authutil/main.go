@@ -21,6 +21,12 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+var (
+	InvalidAuthHeaderErr = errors.New("invalid auth header")
+	ExpiredTokenErr      = errors.New("expired token")
+	InvalidTokenErr      = errors.New("invalid token")
+)
+
 // CreateTokenForUser Create a Token with an expire_at time
 func CreateTokenForUser(user *model.User, config config.Data) (Token, error) {
 	// create token
@@ -49,26 +55,24 @@ func CreateTokenForUser(user *model.User, config config.Data) (Token, error) {
 	}, nil
 }
 
-// validate token
-
-func VerifyAuthTokenInRequestHeader(w http.ResponseWriter, r *http.Request, config config.Data) (*Claims, error) {
+func VerifyAuthTokenInRequestHeader(r *http.Request, config config.Data) (*Claims, error) {
 	// get auth header
-	authHeader := r.Header.Get("Authorization")
+	authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 
 	// sanity check
 	if authHeader == "" {
-		return nil, errors.New("invalid auth header")
+		return nil, InvalidAuthHeaderErr
 	}
 
 	// check token format
 	headerParts := strings.Split(authHeader, " ")
 	if len(headerParts) != 2 {
-		return nil, errors.New("invalid auth header")
+		return nil, InvalidAuthHeaderErr
 	}
 
 	// check headerParts first to have Bearer
 	if headerParts[0] != "Bearer" {
-		return nil, errors.New("unauthorized")
+		return nil, InvalidAuthHeaderErr
 	}
 
 	tokenString := headerParts[1]
@@ -89,15 +93,15 @@ func VerifyAuthTokenInRequestHeader(w http.ResponseWriter, r *http.Request, conf
 	if err != nil {
 		// catch expired tokens
 		if strings.HasPrefix(err.Error(), "token is expired by") {
-			return nil, errors.New("expired token")
+			return nil, ExpiredTokenErr
 		}
 
-		return nil, err
+		return nil, InvalidTokenErr
 	}
 
 	// check the issuer to be correct
 	if claims.Issuer != config.Domain {
-		return nil, errors.New("incorrect issuer")
+		return nil, InvalidTokenErr
 	}
 
 	return claims, err
