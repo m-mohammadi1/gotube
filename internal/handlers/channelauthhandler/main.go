@@ -16,11 +16,17 @@ type Handler struct {
 	util   channelauth.Util
 }
 
-func New(repo repository.ChannelRepository, config config.Data) Handler {
+func New(
+	repo repository.ChannelRepository,
+	config config.Data,
+	tokenExchanger channelauth.TokenExchanger,
+	channelLister channelauth.ChannelLister,
+) Handler {
+
 	return Handler{
 		repo:   repo,
 		config: config,
-		util:   channelauth.NewUtil(config),
+		util:   channelauth.New(config, tokenExchanger, channelLister),
 	}
 }
 

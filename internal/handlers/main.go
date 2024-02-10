@@ -4,6 +4,7 @@ import (
 	"gotube/internal/config"
 	"gotube/internal/handlers/channelauthhandler"
 	"gotube/internal/handlers/userhandler"
+	"gotube/internal/utils/youtubeutil"
 	"gotube/pkg/repository"
 )
 
@@ -14,9 +15,11 @@ type Handler struct {
 }
 
 func New(repo repository.Repository, config config.Data) Handler {
+	youtube := youtubeutil.New()
+
 	return Handler{
 		UsersHandler:       userhandler.New(repo.UserRepository, config),
-		ChannelAuthHandler: channelauthhandler.New(repo.ChannelRepository, config),
+		ChannelAuthHandler: channelauthhandler.New(repo.ChannelRepository, config, youtube, youtube),
 		config:             config,
 	}
 }
